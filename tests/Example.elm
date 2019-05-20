@@ -1,10 +1,17 @@
-module Example exposing (..)
+module Example exposing (suite)
 
-import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
+import Main exposing (..)
 import Test exposing (..)
+import Url exposing (Url)
 
 
-suite : Test
-suite =
-    todo "Implement our first test. See https://package.elm-lang.org/packages/elm-explorations/test/latest for how to do this!"
+route_suite : Test
+route_suite =
+    describe "Route"
+        [ test "should parse URL" <|
+            \_ ->
+                Url.fromString "http://example.com"
+                    |> Maybe.andThen Route.parse
+                    |> Expect.equal (Just Route.Top)
+        ]
