@@ -5,6 +5,7 @@ import Browser.Navigation as Nav
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
+import Json.Decode as D exposing (Decoder)
 import Route exposing (Route)
 import Url
 import Url.Builder
@@ -147,3 +148,63 @@ view model =
                 viewUserPage repos
         ]
     }
+
+
+viewNotFound : Html Msg
+viewNotFound =
+    text "not found"
+
+
+viewError : Http.Error -> Html Msg
+viewError error =
+    case error of
+        Http.BadBody message ->
+            pre [] [ text message ]
+
+        _ ->
+            text (Debug.toString error)
+
+
+viewTopPage : Html Msg
+viewTopPage =
+    ul []
+        [ viewLink (Url.Builder.absolute [ "elm" ] [])
+        , viewLink (Url.Builder.absolute [ "evancz" ] [])
+        ]
+
+
+viewUserRepo : List Repo -> Html msg
+viewUserRepo repoList =
+    ul []
+        (reposDecoder
+            |> List.map
+                (\repo ->
+                    viewLink
+                        (Url.Builder.absolute [ repo.owner, repo.name ] [])
+                )
+        )
+
+
+viewLink : String -> Html msg
+viewLink path =
+    li [] [ a [ href path ] [ text path ] ]
+
+
+
+-- GITHUB
+
+
+type alias Repo =
+    { name : String
+    , description : String
+    , language : Maybe String
+    , owner : String
+    , fork : Int
+    , star : Int
+    , watch : Int
+    }
+
+
+reposDecoder : Decoder (List Repo)
+reposDecoder =
+    D.list reposDecoder
