@@ -9,7 +9,7 @@
   },
   "license": "ISC",
   "scripts": {
-    "dev": "webpack-dev-server --mode development --port 3000 --debug"
+    "dev": "webpack-dev-server --mode development --port 3000"
   },
   "devDependencies": {},
   "dependencies": {

@@ -94,7 +94,7 @@ goTo routeMaybe model =
     case routeMaybe of
         Just Route.Top ->
             --- TopPageは即座にページ更新
-            ( { model | page = NotFound }, Cmd.none )
+            ( { model | page = TopPage }, Cmd.none )
 
         Just (Route.User userName) ->
             ( model
@@ -196,7 +196,7 @@ viewLink path =
 
 type alias Repo =
     { name : String
-    , description : String
+    , description : Maybe String
     , language : Maybe String
     , owner : String
     , fork : Int
@@ -213,8 +213,8 @@ reposDecoder =
 repoDecoder : Decoder Repo
 repoDecoder =
     D.map7 Repo
-        (D.field "mame" D.string)
-        (D.field "description" D.string)
+        (D.field "name" D.string)
+        (D.maybe (D.field "description" D.string))
         (D.maybe (D.field "language" D.string))
         (D.at [ "owner", "login" ] D.string)
         (D.field "forks_count" D.int)
