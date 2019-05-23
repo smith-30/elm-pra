@@ -207,4 +207,16 @@ type alias Repo =
 
 reposDecoder : Decoder (List Repo)
 reposDecoder =
-    D.list reposDecoder
+    D.list repoDecoder
+
+
+repoDecoder : Decoder Repo
+repoDecoder =
+    D.map7 Repo
+        (D.field "mame" D.string)
+        (D.field "description" D.string)
+        (D.maybe (D.field "language" D.string))
+        (D.at [ "owner", "login" ] D.string)
+        (D.field "forks_count" D.int)
+        (D.field "stargazers_count" D.int)
+        (D.field "watchers_count" D.int)
