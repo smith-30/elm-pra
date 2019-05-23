@@ -57,7 +57,7 @@ init flags url key =
 type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChanged Url.Url
-    | Loaded (Result Http.Error.Page)
+    | Loaded (Result Http.Error Page)
 
 
 update msg model =
@@ -80,7 +80,7 @@ update msg model =
                 | page =
                     case result of
                         Ok page ->
-                            Page
+                            page
 
                         Err e ->
                             ErrorPage e
@@ -94,7 +94,7 @@ goTo routeMaybe model =
     case routeMaybe of
         Just Route.Top ->
             --- TopPageは即座にページ更新
-            ( { model | page = NotFound }, Cmd.None )
+            ( { model | page = NotFound }, Cmd.none )
 
         Just (Route.User userName) ->
             ( model
@@ -138,14 +138,14 @@ view model =
             NotFound ->
                 viewNotFound
 
-            ErrorPage ->
+            ErrorPage error ->
                 viewError error
 
             TopPage ->
                 viewTopPage
 
             UserPage repoList ->
-                viewUserPage repos
+                viewUserPage repoList
         ]
     }
 
@@ -173,10 +173,10 @@ viewTopPage =
         ]
 
 
-viewUserRepo : List Repo -> Html msg
-viewUserRepo repoList =
+viewUserPage : List Repo -> Html msg
+viewUserPage repoList =
     ul []
-        (reposDecoder
+        (repoList
             |> List.map
                 (\repo ->
                     viewLink
