@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
+import Github exposing (Repo, getRepos)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
@@ -98,16 +99,9 @@ goTo routeMaybe model =
 
         Just (Route.User userName) ->
             ( model
-            , Http.get
-                { url =
-                    Url.Builder.crossOrigin "https://api.github.com"
-                        [ "users", userName, "repos" ]
-                        []
-                , expect =
-                    Http.expectJson
-                        (Result.map UserPage >> Loaded)
-                        reposDecoder
-                }
+            , Github.getRepos
+                (Result.map UserPage >> Loaded)
+                userName
             )
 
         Nothing ->
@@ -192,31 +186,3 @@ viewLink path =
 
 
 -- GITHUB
-
-
-type alias Repo =
-    { name : String
-    , description : Maybe String
-    , language : Maybe String
-    , owner : String
-    , fork : Int
-    , star : Int
-    , watch : Int
-    }
-
-
-reposDecoder : Decoder (List Repo)
-reposDecoder =
-    D.list repoDecoder
-
-
-repoDecoder : Decoder Repo
-repoDecoder =
-    D.map7 Repo
-        (D.field "name" D.string)
-        (D.maybe (D.field "description" D.string))
-        (D.maybe (D.field "language" D.string))
-        (D.at [ "owner", "login" ] D.string)
-        (D.field "forks_count" D.int)
-        (D.field "stargazers_count" D.int)
-        (D.field "watchers_count" D.int)
