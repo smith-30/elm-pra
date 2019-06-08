@@ -7,9 +7,11 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
 import Json.Decode as D exposing (Decoder)
+import Page.User as User
 import Route exposing (Route)
 import Url
 import Url.Builder
+import ViewUtil exposing (viewLink)
 
 
 
@@ -42,7 +44,7 @@ type Page
     = NotFound
     | ErrorPage Http.Error
     | TopPage
-    | UserPage (List Repo)
+    | UserPage User.Model
 
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -58,7 +60,7 @@ init flags url key =
 type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChanged Url.Url
-    | Loaded (Result Http.Error Page)
+    | UserMsg User.Msg
 
 
 update msg model =
@@ -75,19 +77,19 @@ update msg model =
             -- ページ初期化処理をヘルパー関数に移譲
             goTo (Route.parse url) model
 
-        --- ページの内容を非同期で取得したときの共通処理
-        Loaded result ->
-            ( { model
-                | page =
-                    case result of
-                        Ok page ->
-                            page
+        UserMsg userMsg ->
+            case model.page of
+                UserPage userModel ->
+                    let
+                        ( newUserModel, usrCmd ) =
+                            User.update userMsg userModel
+                    in
+                    ( { model | page = UserPage newUserModel }
+                    , Cmd.map UserMsg usrCmd
+                    )
 
-                        Err e ->
-                            ErrorPage e
-              }
-            , Cmd.none
-            )
+                _ ->
+                    ( model, Cmd.none )
 
 
 goTo : Maybe Route -> Model -> ( Model, Cmd Msg )
@@ -98,10 +100,12 @@ goTo routeMaybe model =
             ( { model | page = TopPage }, Cmd.none )
 
         Just (Route.User userName) ->
-            ( model
-            , Github.getRepos
-                (Result.map UserPage >> Loaded)
-                userName
+            let
+                ( userModel, usrCmd ) =
+                    User.init userName
+            in
+            ( { model | page = UserPage userModel }
+            , Cmd.map UserMsg usrCmd
             )
 
         Nothing ->
@@ -138,8 +142,9 @@ view model =
             TopPage ->
                 viewTopPage
 
-            UserPage repoList ->
-                viewUserPage repoList
+            UserPage userModel ->
+                User.view userModel
+                    |> Html.map UserMsg
         ]
     }
 
@@ -173,16 +178,7 @@ viewUserPage repoList =
         (repoList
             |> List.map
                 (\repo ->
-                    viewLink
+                    ViewUtil.viewLink
                         (Url.Builder.absolute [ repo.owner, repo.name ] [])
                 )
         )
-
-
-viewLink : String -> Html msg
-viewLink path =
-    li [] [ a [ href path ] [ text path ] ]
-
-
-
--- GITHUB
